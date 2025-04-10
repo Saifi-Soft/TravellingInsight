@@ -1,4 +1,5 @@
 const express = require('express');
+equire('express');
 const path = require('path');
 const cors = require('cors');
 const connectDB = require('./config/db');

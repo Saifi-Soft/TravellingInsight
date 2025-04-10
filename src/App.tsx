@@ -10,6 +10,8 @@ import AllPosts from "./pages/AllPosts";
 import Post from "./pages/Post";
 import Category from "./pages/Category";
 import Search from "./pages/Search";
+import About from "./pages/About";
+import Destinations from "./pages/Destinations";
 import Community from "./pages/Community";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -36,9 +38,8 @@ const queryClient = new QueryClient({
 const App = () => {
   const [storageStatus, setStorageStatus] = useState<{
     initialized: boolean;
-    noAccess: boolean;
     message?: string;
-  }>({ initialized: false, noAccess: false });
+  }>({ initialized: false });
   
   // Initialize file storage on app load
   useEffect(() => {
@@ -48,68 +49,38 @@ const App = () => {
         console.log("App: Initializing storage...");
         const result = await initializeStorage();
         console.log("App: Storage initialization result:", result);
-        
         if (result.success) {
           console.log("Storage initialized successfully");
-          setStorageStatus({ 
-            initialized: true, 
-            noAccess: false
+          setStorageStatus({
+            initialized: true,
+            message: undefined,
           });
-          
-          if (result.successMessage) {
-            toast.success("Storage connected", {
-              description: result.successMessage
-            });
-          }
         } else {
-          console.error("Storage initialization failed:", result.message);
-          
-          // Set status based on result
-          setStorageStatus({ 
+          setStorageStatus({
             initialized: false,
-            noAccess: !!result.noAccess,
-            message: result.message
           });
-          
-          // If there's no access due to permissions
-          if (result.noAccess) {
-            toast.warning("Storage access unavailable", {
-              description: "Using placeholder images. Check server configuration to enable uploads.",
-              duration: 10000,
-              action: {
-                label: "Retry",
-                onClick: () => initStorage()
-              }
-            });
-          } else {
-            // Show a clear error message for other errors
-            toast.error("Storage initialization failed", {
-              description: result.message || "Some features may not work correctly",
-              duration: 8000,
-              action: {
-                label: "Retry",
-                onClick: () => initStorage()
-              }
-            });
-          }
+          const description = result.success ? "" : result.message;
+          toast.error("Storage initialization failed", {
+            description,
+          });
         }
       } catch (err) {
-        console.error("Error initializing storage:", err);
-        setStorageStatus({ initialized: false, noAccess: false });
         
+        
+        console.error("Error initializing storage:", err);
+        setStorageStatus({ initialized: false });
+
         toast.error("Storage connection error", {
-          description: "Using placeholder images instead",
-          duration: 8000,
-          action: {
-            label: "Retry",
-            onClick: () => initStorage()
-          }
+          description:
+            "Storage connection error : " +
+            err.message +
+            " Using placeholder images instead. Check the server configuration to enable uploads.",
         });
       }
     };
-    
+
     initStorage();
-  }, []);
+  }, []); // add an empty array to make it run only once
   
   return (
     <QueryClientProvider client={queryClient}>
@@ -124,6 +95,8 @@ const App = () => {
               <Route path="/post/:slug" element={<Post />} />
               <Route path="/category/:slug" element={<Category />} />
               <Route path="/search" element={<Search />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/destinations" element={<Destinations />} />
               <Route path="/community" element={<Community />} />
               
               {/* Admin Routes */}

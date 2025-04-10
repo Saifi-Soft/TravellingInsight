@@ -9,34 +9,43 @@ let storageInitialized = false;
  * Initialize the file storage service
  * @returns Object with initialization status
  */
-export const initializeStorage = async (): Promise<{
-  success: boolean;
-  noAccess?: boolean;
-  message?: string;
-  successMessage?: string;
-}> => {
+export const initializeStorage = async (): Promise<
+  | { success: true; status: number; message: string }
+  | { success: false; message: string; status?: number }
+> => {
+  
+
   try {
     // Check server health
-    const response = await apiClient.get('/api/health');
-    
-    if (response.status === 200) {
+    const response = await apiClient.get('/api/health').catch(err => err.response);
+
+
+    if (response?.status === 200) {
       storageInitialized = true;
       return {
+        
         success: true,
-        successMessage: 'Connected to server successfully'
+        status: response.status,        
+        message: "Storage connected successfully"
       };
     } else {
+      storageInitialized = false;
+      
       return {
-        success: false,
-        message: 'Failed to connect to server'
+        success: false,        
+        message: `Failed to connect to server. Status code: ${response.status}`,
+        status: response.status,
       };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error initializing storage:', error);
+    storageInitialized = false;
     return {
+      message: `Could not connect to the server. File uploads will not be available. ${
+        error.response?.status ? `Status code: ${error.response.status}` : ""
+      }`,
       success: false,
-      noAccess: true,
-      message: 'Could not connect to the server. File uploads will not be available.'
+      status: error.response?.status,
     };
   }
 };
